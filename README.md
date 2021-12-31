@@ -14,6 +14,12 @@ may be used for scrap another useful data from others hotels or restaurants.
 by tripadvisor and paste in urls.txt local file.
 
 ## It is parameterizable
+```python
+scraper.work(landing_page=url, writer=writer, nums_hotel_to_scrape=60,
+                              city='Florianopolis', comments_page_depth=25, lang_comments='Portuguese')
+```
+
+
  - How many comments do you need? 
 ```python
     comments_page_depth=30
