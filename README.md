@@ -6,6 +6,7 @@ This Python class was designed for scraping comments of users of hotels of **Pun
 may be used for scrap another useful data from others hotels or restaurants. 
 
 ![green-palms-raise-up-sky-sunny-beach](img/green-palms-raise-up-sky-sunny-beach.png?raw=true "Title")
+<br/>
 (Image credit: https://www.freepik.com/)
 
 
