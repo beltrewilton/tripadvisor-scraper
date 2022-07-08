@@ -70,11 +70,11 @@ class Tripadvisor:
                 hnum += 1
                 self.driver.get(hotel_review)
                 time.sleep(np.random.uniform(6, 9))
-                hotel_name = self.driver.find_element_by_css_selector('h1.fkWsC').text
+                hotel_name = self.driver.find_element_by_css_selector('h1.QdLfr').text
                 li_langs = self.driver.find_elements_by_css_selector('li.ui_radio')
                 lang_found = False
                 for li in li_langs:
-                    lang = li.find_element_by_css_selector('span.fwSIg').text
+                    lang = li.find_element_by_css_selector('span.ZmySZ').text
                     if lang == lang_comments:
                         lang_found = True
                         li.find_element_by_tag_name("span").click()
@@ -85,7 +85,7 @@ class Tripadvisor:
                     print("No lang {} found for {}.".format(lang_comments, hotel_name))
                     continue
 
-                total_reviews = self.driver.find_element_by_css_selector('span.btQSs').text.split(" ")[0].replace(',', '')
+                total_reviews = self.driver.find_element_by_css_selector('span.iypZC').text.split(" ")[0].replace(',', '')
                 if int(total_reviews) < 10:
                     continue
 
@@ -106,26 +106,26 @@ class Tripadvisor:
                             print(ex)
                             break
 
-                    reviews = self.driver.find_elements_by_css_selector('div.cWwQK')
+                    reviews = self.driver.find_elements_by_css_selector('div.YibKl')
                     for rev in reviews:
                         wrote = None
                         try:
-                            wrote = rev.find_element_by_css_selector('span.euPKI').text.replace('Date of stay: ', '')
+                            wrote = rev.find_element_by_css_selector('span.teHYY').text.replace('Date of stay: ', '')
                         except Exception as ex:
                             print(ex)
 
                         location = None
                         try:
-                            location = self.driver.find_element_by_xpath("//span[@class='default ShLyt small']").text
+                            location = self.driver.find_element_by_xpath("//span[@class='default LXUOn small']").text
                         except Exception as ex:
                             print(ex)
 
                         try:
-                            title = rev.find_element_by_css_selector('a.fCitC').find_element_by_tag_name("span").find_element_by_tag_name("span").text
-                            comment = rev.find_element_by_css_selector('q.XllAv').find_element_by_tag_name("span").text
-                            rating = rev.find_element_by_css_selector('div.emWez').find_element_by_tag_name("span").get_attribute("class").split(" ")[1]
+                            title = rev.find_element_by_css_selector('a.Qwuub').find_element_by_tag_name("span").find_element_by_tag_name("span").text
+                            comment = rev.find_element_by_css_selector('q.QewHA').find_element_by_tag_name("span").text
+                            rating = rev.find_element_by_css_selector('div.Hlmiy').find_element_by_tag_name("span").get_attribute("class").split(" ")[1]
                             rating = self.__rating(rating)
-                            # print("{}\t{}\t{}\t{}\t{}\t{}".format(hotel_name, location, wrote, rating, title, comment))
+                            print("{}\t{}\t{}\t{}\t{}\t{}".format(hotel_name, location, wrote, rating, title, comment))
                             writer.writerow([hotel_name, location, wrote, rating, title, comment])
                         except Exception as ex:
                             print(ex)
