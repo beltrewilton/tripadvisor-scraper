@@ -17,6 +17,13 @@ may be used for scrap another useful data from others hotels or restaurants.
 - Go to [tripadvisor](https://www.tripadvisor.com), click on Hotels, search for the name of a city and copy de url generated
 by tripadvisor and paste in urls.txt local file.
 
+## Example
+```shell
+python scraper.py --numhotel=10 --city=Florianopolis --maxcommentsperpage=10 --lang=Portuguese --outfile=my_dummy_file_data --verbose=1
+
+```
+
+
 ## It is parameterizable
 
  - urls.txt file look like:

@@ -61,7 +61,7 @@ class Tripadvisor:
         hotel_review_pages = list(filter(None, hotel_review_pages))
         return hotel_review_pages
 
-    def work(self, landing_page, writer, nums_hotel_to_scrape, city, comments_page_depth=15, lang_comments='Spanish'):
+    def work(self, landing_page, writer, nums_hotel_to_scrape, city, comments_page_depth=15, lang_comments='Spanish', verbose=0):
         hnum = 1
         hotel_review_pages = self.__full_list(landing_page, nums_hotel_to_scrape, city)
         try:
@@ -125,7 +125,8 @@ class Tripadvisor:
                             comment = rev.find_element_by_css_selector('q.QewHA').find_element_by_tag_name("span").text
                             rating = rev.find_element_by_css_selector('div.Hlmiy').find_element_by_tag_name("span").get_attribute("class").split(" ")[1]
                             rating = self.__rating(rating)
-                            print("{}\t{}\t{}\t{}\t{}\t{}".format(hotel_name, location, wrote, rating, title, comment))
+                            if verbose:
+                                print("{}\t{}\t{}\t{}\t{}\t{}".format(hotel_name, location, wrote, rating, title, comment))
                             writer.writerow([hotel_name, location, wrote, rating, title, comment])
                         except Exception as ex:
                             print(ex)
