@@ -16,12 +16,12 @@ may be used for scrap another useful data from others hotels or restaurants.
 - Download Chromedrive from [here](https://chromedriver.storage.googleapis.com/index.html) and put it on ./bin/ folder.
   - This should be the same version of your Google Chrome Browser, check this in your browser > _About Google Chrome_ .
 - Install Python packages from requirements file, either using pip, conda or virtualenv.
-  - Recommended steps on mac:
+  - Recommended steps on mac (linux may be similar):
 ```shell
 # create a virtual environment
 python -m venv ./myvirtualenv
 # enter to the recent created environment
-source ./tripad/bin/activate
+source ./myvirtualenv/bin/activate
 # look for the packages list
 python -m pip list
 # install requeriments
