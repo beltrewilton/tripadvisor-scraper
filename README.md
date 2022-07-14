@@ -40,8 +40,9 @@ python scraper.py --numhotel=10 --city=Florianopolis --maxcommentsperpage=10 --l
 ## News [Jul/2022]
 New function for scrap questions with their associate answers, the param is --qya.
 ### Example
+```shell
 python scraper.py --qya=1 --numhotel=30 --city=Miami_Beach --pagedepth=20 --lang=English --outfile=miami_beach --verbose=1 
-
+```
 ## It is parameterizable
 
  - urls.txt file look like:
