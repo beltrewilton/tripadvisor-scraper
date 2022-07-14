@@ -5,6 +5,7 @@ from selenium.webdriver.chrome.options import Options
 import time
 import logging
 import traceback
+import re
 
 URL_FILENAME = 'urls.txt'
 MAX_WAIT = 10
@@ -35,7 +36,7 @@ class Tripadvisor:
 
     def __hotel_urls(self, href, nums_hotel_to_scrape, key):
         hotel_urls = []
-        for n in range(0, nums_hotel_to_scrape, 30):
+        for n in range(0, nums_hotel_to_scrape, 30):  # 30 numbers of hotels in the landing-page
             if n == 0:
                 hotel_urls.append(href)
             else:
@@ -45,12 +46,14 @@ class Tripadvisor:
     def __full_list(self, landing_page, nums_hotel_to_scrape, key):
         hotel_review_pages = []
 
-        for url in self.__hotel_urls(landing_page, nums_hotel_to_scrape, key):
+        for k, url in enumerate(self.__hotel_urls(landing_page, nums_hotel_to_scrape, key)):
             try:
                 self.driver.get(url)
                 print(url)
                 time.sleep(np.random.uniform(6, 9))
                 review_count = self.driver.find_elements_by_css_selector('a.review_count')
+                if len(review_count) == 0:
+                    review_count = self.driver.find_elements_by_css_selector('li.ui_column a')  # work for Finland :/
                 # hrefs = [h.get_attribute("href") for h in review_count]
                 for h in review_count:
                     hotel_review_pages.append(h.get_attribute("href"))
@@ -99,7 +102,7 @@ class Tripadvisor:
 
                         try:
                             next = self.driver.find_element_by_xpath("//span[@class='pageNum current disabled']/following-sibling::a")
-                            print("{} :: {}".format(i + 1, next.get_attribute("href")))
+                            # print("{} :: {}".format(i + 1, next.get_attribute("href")))
                             next.click()
                             time.sleep(np.random.uniform(3, 6))
                         except Exception as ex:
@@ -132,6 +135,163 @@ class Tripadvisor:
                             print(ex)
         except Exception as ex:
             print(ex)
+
+
+
+    # https://www.tripadvisor.com/Hotels-g45963-Las_Vegas_Nevada-Hotels.html
+    def work_qya(self, landing_page, writer, writer_ans, nums_hotel_to_scrape, city, comments_page_depth=15,  verbose=0):
+        hnum = 1
+        hotel_review_pages = self.__full_list(landing_page, nums_hotel_to_scrape, city)
+        idx = 1
+        for hotel_review in hotel_review_pages:
+            try:
+                print("{}/{} {}".format(hnum, len(hotel_review_pages), hotel_review))
+                hnum += 1
+                self.driver.get(hotel_review.replace('#REVIEWS', ''))
+                time.sleep(np.random.uniform(4, 7))
+                hotel_name = self.driver.find_element_by_css_selector('h1.QdLfr').text
+                try:
+                    self.driver.find_element_by_css_selector('span.test-target-tab-Questions').click()  # swich to Q&A
+                    time.sleep(np.random.uniform(4, 7))
+                except Exception as ex:  # Element is not clickable at point
+                    print(ex)
+                    continue
+
+                total_questions = 0
+                try:
+                    total_questions = self.driver.find_element_by_css_selector('a.weEPs').text.split(' ')[2]
+                except Exception as ex:
+                    print(ex)  # looks less than 5 q.
+                    continue  # not enough q.
+                question_per_page = 5
+                for i in range(comments_page_depth):
+                    if i > 0:
+                        if i * question_per_page >= int(total_questions):
+                            print("low questions in this page {} {}".format(total_questions, hotel_name))
+                            break
+
+                        try:
+                            next = self.driver.find_element_by_xpath(
+                                "//span[@class='pageNum current disabled']/following-sibling::span")
+                            print("{} :: {}".format(i + 1, next.get_attribute("href")))
+                            next.click()
+                            time.sleep(np.random.uniform(5, 8))
+                        except Exception as ex:
+                            print(ex)
+                            break
+
+                    questions = self.driver.find_elements_by_css_selector('div.YibKl')
+                    for quest in questions:
+                        idx += 1
+                        question = quest.find_element_by_css_selector('a.ncbar').text
+                        qheader = quest.find_element_by_css_selector('div.cRVSd span').text.split(' asked a question ')
+                        quser = qheader[0]
+                        qdate = qheader[1]
+                        qcity = None
+                        try:
+                            qcity = quest.find_element_by_css_selector('span.RdTWF span').text
+                        except Exception as ex:
+                            print(ex)
+                        helps = None
+                        qcontrib = None
+                        qhelpvotes = None
+                        try:
+                            helps = quest.find_elements_by_css_selector('span.yRNgz')
+                            qcontrib = helps[0].text
+                            qhelpvotes = helps[1].text
+                        except Exception as ex:
+                            print(ex)
+
+                        responder = []
+                        try:
+                            quest.find_element_by_css_selector('a.uRJQp').click()  # show all comments
+                            time.sleep(np.random.uniform(4, 7))
+                            resp = quest.find_elements_by_css_selector('div.XoYbv')
+
+                            for i in range(1, len(resp)):
+                                resp_dict = {}
+                                ruser = None
+                                try:
+                                    ruser = resp[i].find_element_by_css_selector('div.cRVSd a').text
+                                    resp_dict.update({'user': ruser})
+                                    resp_dict.update({'question_id': idx})
+                                except Exception as ex:
+                                    print(ex)
+                                rdate = None
+                                try:
+                                    rdate = resp[i].find_element_by_css_selector('div.iHmzx span').text.replace(' |', '')
+                                    resp_dict.update({'date': rdate})
+                                except Exception as ex:
+                                    print(ex)
+                                ransw = None
+                                try:
+                                    ransw = resp[i].find_element_by_css_selector('div.roHJW').text
+                                    resp_dict.update({'ans': ransw})
+                                except Exception as ex:
+                                    print(ex)
+                                rvotes = None
+                                try:
+                                    rvotes = resp[i].find_element_by_css_selector('span.FzkHe').text  # 1 vote, 200 votes
+                                    rvotes = re.sub('\ vote.?', '', rvotes)
+                                    resp_dict.update({'votes': rvotes})
+                                except Exception as ex:
+                                    print(ex)
+                                responder.append(resp_dict)
+                        except Exception as ex:
+                            print(ex)
+                            ruser = None
+                            resp_dict = {}
+                            try:
+                                ruser = quest.find_elements_by_css_selector('div.cRVSd a')[1].text
+                                resp_dict.update({'user': ruser})
+                                resp_dict.update({'question_id': idx})
+                            except Exception as ex:
+                                print(ex)
+                            rdate = None
+                            try:
+                                rdate = quest.find_element_by_css_selector('div.iHmzx span').text.replace(' |', '')
+                                resp_dict.update({'date': rdate})
+                            except Exception as ex:
+                                print(ex)
+                            ransw = None
+                            try:
+                                ransw = quest.find_element_by_css_selector('div.roHJW').text
+                                resp_dict.update({'ans': ransw})
+                            except Exception as ex:
+                                print(ex)
+                            rvotes = None
+                            try:
+                                rvotes = quest.find_element_by_css_selector('span.FzkHe').text.replace(' votes', '')
+                                resp_dict.update({'votes': rvotes})
+                            except Exception as ex:
+                                print(ex)
+                            responder.append(resp_dict)
+
+                        if verbose:
+                            print('{}\t{}\t{}\t{}\t{}\t{}\n{}\n'.format(idx, hotel_name, quser, qcity, qdate, qcontrib,
+                                                                        qhelpvotes, question, responder))
+                        writer.writerow([idx, hotel_name, quser, qcity, qdate, qcontrib, qhelpvotes, question])
+                        # ['id', 'hotel_name', 'user', 'city', 'date', 'contrib', 'help_votes', 'question']
+                        for r in responder:
+                            try:
+                                writer_ans.writerow([r['question_id'], r['user'], r['date'], r['ans'], r['votes']])
+                            except Exception as ex:
+                                pass
+            except Exception as ex:
+                errors = ['crash', 'renderer', 'disconnected', 'unknown']
+                if any(x in str(ex) for x in errors):
+                    time.sleep(np.random.uniform(10, 15))
+                    try:
+                        self.driver.close()
+                        self.driver.quit()
+                    except Exception as ex:
+                        pass
+                    print('Waiting for new connection.......')
+                    time.sleep(np.random.uniform(100, 120))
+                    self.driver = self.__get_driver()
+                else:
+                    print('Dead:', ex)
+
 
     def __get_logger(self):
         # create logger
